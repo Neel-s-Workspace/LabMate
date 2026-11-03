@@ -13,7 +13,7 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -117,6 +117,9 @@ async def viva_arena_page(request: Request):
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
+    if request.url.path.startswith("/api/") or "application/json" in request.headers.get("accept", ""):
+        detail = getattr(exc, "detail", "Not Found")
+        return JSONResponse(status_code=404, content={"detail": detail})
     return templates.TemplateResponse(
         request,
         "base.html",
@@ -132,6 +135,9 @@ async def not_found_handler(request: Request, exc):
 @app.exception_handler(500)
 async def server_error_handler(request: Request, exc):
     logger.error("Internal server error: %s", exc)
+    if request.url.path.startswith("/api/") or "application/json" in request.headers.get("accept", ""):
+        detail = getattr(exc, "detail", "Internal Server Error")
+        return JSONResponse(status_code=500, content={"detail": detail})
     return templates.TemplateResponse(
         request,
         "base.html",
