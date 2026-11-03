@@ -134,9 +134,9 @@ def parse_sections_from_response(raw_text: str, requested_sections: list[str]) -
     normalized_keys = [k.lower() for k in requested_sections]
 
     # Pattern matches headers like:
-    # ### [AIM] or ## [AIM] or ### AIM or ## Aim: or **AIM**
+    # ### [AIM] or ## [AIM] or ### [VIVA QUESTIONS] or ### AIM / OBJECTIVE or ## Aim: or **AIM**
     pattern = re.compile(
-        r"(?:^|\n)(?:#{1,4}\s*(?:\[(?P<tag_bracket>[A-Za-z_]+)\]|(?P<tag_plain>[A-Za-z_\s]+?):?))\s*(?:\n|$)",
+        r"(?:^|\n)(?:#{1,4}\s*(?:\[(?P<tag_bracket>[^\]\n]+)\]|(?P<tag_plain>[A-Za-z0-9_\s/&]+?):?))\s*(?:\n|$)",
         re.MULTILINE,
     )
 
@@ -145,7 +145,8 @@ def parse_sections_from_response(raw_text: str, requested_sections: list[str]) -
     if matches:
         for i, match in enumerate(matches):
             raw_tag = (match.group("tag_bracket") or match.group("tag_plain") or "").strip().lower()
-            cleaned_tag = raw_tag.replace(" ", "_")
+            cleaned_tag = re.sub(r"[^\w\s]", " ", raw_tag).strip()
+            cleaned_tag = re.sub(r"\s+", "_", cleaned_tag)
 
             if "aim" in cleaned_tag or "objective" in cleaned_tag:
                 key = "aim"
@@ -153,13 +154,13 @@ def parse_sections_from_response(raw_text: str, requested_sections: list[str]) -
                 key = "algorithm"
             elif "code" in cleaned_tag or "program" in cleaned_tag or "source" in cleaned_tag:
                 key = "code"
-            elif "output" in cleaned_tag or "result" in cleaned_tag:
+            elif "output" in cleaned_tag or "result" in cleaned_tag or "trace" in cleaned_tag:
                 key = "output"
             elif "complexity" in cleaned_tag:
                 key = "complexity"
-            elif "viva" in cleaned_tag:
+            elif "viva" in cleaned_tag or "oral" in cleaned_tag or "question" in cleaned_tag:
                 key = "viva_questions"
-            elif "precaution" in cleaned_tag or "note" in cleaned_tag:
+            elif "precaution" in cleaned_tag or "note" in cleaned_tag or "instruction" in cleaned_tag:
                 key = "precautions"
             else:
                 key = cleaned_tag
@@ -174,14 +175,16 @@ def parse_sections_from_response(raw_text: str, requested_sections: list[str]) -
     # If parsing found fewer than requested sections, check for fallback regex for each missing key
     for key in normalized_keys:
         if key not in result or not result[key]:
-            escaped_key = re.escape(key.upper())
-            direct_pattern = re.compile(
-                rf"(?:###?\s*\[?{escaped_key}\]?[:\s]*\n)(.*?)(?=(?:###?\s*\[?[A-Z_]+\]?)|$)",
-                re.DOTALL | re.IGNORECASE,
-            )
-            direct_match = direct_pattern.search(raw_text)
-            if direct_match and direct_match.group(1).strip():
-                result[key] = direct_match.group(1).strip()
+            alt_key = key.replace("_", " ")
+            patterns_to_try = [
+                rf"(?:###?\s*\[?{re.escape(key)}\]?[:\s]*\n)(.*?)(?=(?:###?\s*\[?[A-Z_\s/&]+\]?)|$)",
+                rf"(?:###?\s*\[?{re.escape(alt_key)}\]?[:\s]*\n)(.*?)(?=(?:###?\s*\[?[A-Z_\s/&]+\]?)|$)",
+            ]
+            for pat in patterns_to_try:
+                direct_match = re.search(pat, raw_text, re.DOTALL | re.IGNORECASE)
+                if direct_match and direct_match.group(1).strip():
+                    result[key] = direct_match.group(1).strip()
+                    break
 
     # If still empty for all requested sections, place all text into first requested section or aim/code
     if not any(result.values()) and raw_text.strip():

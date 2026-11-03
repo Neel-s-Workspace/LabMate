@@ -86,6 +86,29 @@ To demonstrate quicksort algorithm.
         assert "code" in sections
         assert "Regenerate" in sections["code"] or "No content" in sections["code"]
 
+    def test_parse_compound_and_spaced_markers(self):
+        sample_ai_text = """
+### [AIM / OBJECTIVE]
+To implement and analyze Dijkstra's shortest path algorithm.
+
+### [VIVA QUESTIONS]
+Q1: What is greedy method?
+A1: Making the locally optimal choice.
+
+### [PRECAUTIONS & NOTES]
+1. Graph must not contain negative cycles.
+"""
+        sections = parse_sections_from_response(
+            sample_ai_text,
+            ["aim", "viva_questions", "precautions"],
+        )
+        assert "aim" in sections
+        assert "Dijkstra" in sections["aim"]
+        assert "viva_questions" in sections
+        assert "Q1: What is greedy method?" in sections["viva_questions"]
+        assert "precautions" in sections
+        assert "negative cycles" in sections["precautions"]
+
 
 class TestPracticalServiceAsync:
     """Test PracticalService async methods with mock Ollama."""
