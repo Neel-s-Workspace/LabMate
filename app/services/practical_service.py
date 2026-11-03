@@ -285,9 +285,9 @@ class PracticalService:
             system_prompt=SYSTEM_PROMPT,
         )
 
-        # Strip any accidental header markers like ### [AIM] or ## Aim
+        # Strip any accidental header markers like ### [AIM] or ## Aim or ### [Viva Questions & Answers]
         cleaned = re.sub(
-            r"^\s*#{1,4}\s*(?:\[?[\w\s/]+\]?)\s*[:\n]*",
+            r"^\s*#{1,4}\s*(?:\[?[^\]\n]+\]?)\s*[:\n]*",
             "",
             raw_response.strip(),
             flags=re.IGNORECASE,
