@@ -94,3 +94,8 @@ class TestDashboardContent:
     def test_dashboard_has_ai_status(self, client):
         resp = client.get("/")
         assert "ai-status-dot" in resp.text
+
+    def test_sidebar_overlay_script(self, client):
+        resp = client.get("/static/js/app.js")
+        assert resp.status_code == 200
+        assert "overlay.style.display" in resp.text
