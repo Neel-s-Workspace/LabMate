@@ -44,15 +44,6 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Check for Gemini API key
-findstr /C:"GEMINI_API_KEY" .env >nul 2>&1
-if errorlevel 1 (
-    echo  [WARNING] GEMINI_API_KEY is not set in .env
-    echo  AI features will not work without a valid API key.
-    echo  Get a free API key from https://aistudio.google.com/apikey
-    echo.
-)
-
 REM Create data directory
 if not exist "data" mkdir data
 
@@ -63,6 +54,15 @@ if not exist ".env" (
         echo  [OK] Created .env from .env.example
         echo  [IMPORTANT] Edit .env and add your GEMINI_API_KEY!
     )
+)
+
+REM Check for Gemini API key
+findstr /C:"GEMINI_API_KEY" .env >nul 2>&1
+if errorlevel 1 (
+    echo  [WARNING] GEMINI_API_KEY is not set in .env
+    echo  AI features will not work without a valid API key.
+    echo  Get a free API key from https://aistudio.google.com/apikey
+    echo.
 )
 
 echo.
