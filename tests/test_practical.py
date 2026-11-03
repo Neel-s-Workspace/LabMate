@@ -381,3 +381,9 @@ class TestPracticalCRUD:
         assert client.get(f"/api/practicals/{id1}").status_code == 404
         assert client.get(f"/api/practicals/{id2}").status_code == 404
         assert client.get(f"/api/practicals/{dup_id}").status_code == 404
+
+    def test_practical_studio_copy_code_block(self, client):
+        page = client.get("/practical-studio")
+        assert page.status_code == 200
+        assert "copyCodeBlock(this)" in page.text
+        assert "function copyCodeBlock(btn)" in page.text
