@@ -161,7 +161,7 @@
         <div class="card-actions-row">
           <button class="action-icon-btn" onclick="openPreview({{ p.id }})" title="Quick Preview">👁️</button>
           <a href="/practical-studio?edit_id={{ p.id }}" class="action-icon-btn" title="Edit in Studio">✏️</a>
-          <a href="/practicals({{ p.id }})/print" target="_blank" class="action-icon-btn" title="Print / PDF View" onclick="openPrintView(event, {{ p.id }})">🖨️</a>
+          <a href="/practicals/{{ p.id }}/print" target="_blank" class="action-icon-btn" title="Print / PDF View" onclick="openPrintView(event, {{ p.id }})">🖨️</a>
           <button class="action-icon-btn" onclick="duplicatePractical({{ p.id }})" title="Duplicate Practical">📑</button>
           
           <!-- Export Dropdown -->

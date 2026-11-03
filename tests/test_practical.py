@@ -422,3 +422,18 @@ class TestPracticalCRUD:
         assert client.get(f"/api/practicals/{id1}").status_code == 404
         assert client.get(f"/api/practicals/{id2}").status_code == 404
         assert client.get(f"/api/practicals/{dup_id}").status_code == 404
+
+    def test_my_practicals_print_url(self, client):
+        resp = client.post("/api/practicals", json={
+            "subject": "Algorithms",
+            "title": "Merge Sort",
+            "question": "Sort array",
+            "sections": {"aim": "Aim text"},
+        })
+        assert resp.status_code == 200
+        pid = resp.json()["id"]
+
+        page = client.get("/my-practicals")
+        assert page.status_code == 200
+        assert f"/practicals/{pid}/print" in page.text
+        assert f"/practicals({pid})/print" not in page.text
