@@ -381,3 +381,9 @@ class TestPracticalCRUD:
         assert client.get(f"/api/practicals/{id1}").status_code == 404
         assert client.get(f"/api/practicals/{id2}").status_code == 404
         assert client.get(f"/api/practicals/{dup_id}").status_code == 404
+
+    def test_my_practicals_preview_copy_helper(self, client):
+        page = client.get("/my-practicals")
+        assert page.status_code == 200
+        assert "copyModalSection(this)" in page.text
+        assert "function copyModalSection(btn)" in page.text
