@@ -136,6 +136,24 @@ int binarySearch(int arr[], int x);
         assert "BFS traversal" in content
         assert not content.startswith("### [AIM]")  # Header stripped
 
+    @pytest.mark.asyncio
+    async def test_regenerate_section_strips_compound_headers(self):
+        mock_gemini = AsyncMock()
+        mock_gemini.chat.return_value = """### [Viva Questions & Answers]\nQ1: What is BFS?\nA1: Breadth First Search."""
+
+        req = PracticalSectionRegenRequest(
+            section_key="viva_questions",
+            subject="Algorithms",
+            title="BFS",
+            question="BFS",
+            language="Python",
+        )
+
+        content = await PracticalService.regenerate_section(req, mock_gemini)
+        assert "Q1: What is BFS?" in content
+        assert "Viva Questions" not in content
+        assert not content.startswith("& Answers]")
+
 
 # ===========================================================================
 # API Endpoint Integration Tests
