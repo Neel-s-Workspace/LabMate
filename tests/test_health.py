@@ -99,3 +99,20 @@ class TestDashboardContent:
         resp = client.get("/static/js/app.js")
         assert resp.status_code == 200
         assert "overlay.style.display" in resp.text
+
+
+class TestErrorHandlers:
+    """Test global 404 and 500 error handlers for API vs HTML responses (BUG-001)."""
+
+    def test_api_404_returns_json(self, client):
+        resp = client.get("/api/nonexistent-endpoint")
+        assert resp.status_code == 404
+        assert resp.headers["content-type"].startswith("application/json")
+        data = resp.json()
+        assert "detail" in data
+
+    def test_html_404_returns_html(self, client):
+        resp = client.get("/nonexistent-web-page")
+        assert resp.status_code == 404
+        assert "text/html" in resp.headers["content-type"]
+        assert "Page Not Found" in resp.text
