@@ -86,6 +86,29 @@ To demonstrate quicksort algorithm.
         assert "code" in sections
         assert "Regenerate" in sections["code"] or "No content" in sections["code"]
 
+    def test_parse_compound_and_spaced_markers(self):
+        sample_ai_text = """
+### [AIM / OBJECTIVE]
+To implement and analyze Dijkstra's shortest path algorithm.
+
+### [VIVA QUESTIONS]
+Q1: What is greedy method?
+A1: Making the locally optimal choice.
+
+### [PRECAUTIONS & NOTES]
+1. Graph must not contain negative cycles.
+"""
+        sections = parse_sections_from_response(
+            sample_ai_text,
+            ["aim", "viva_questions", "precautions"],
+        )
+        assert "aim" in sections
+        assert "Dijkstra" in sections["aim"]
+        assert "viva_questions" in sections
+        assert "Q1: What is greedy method?" in sections["viva_questions"]
+        assert "precautions" in sections
+        assert "negative cycles" in sections["precautions"]
+
 
 class TestPracticalServiceAsync:
     """Test PracticalService async methods with mock Ollama."""
@@ -135,6 +158,24 @@ int binarySearch(int arr[], int x);
         content = await PracticalService.regenerate_section(req, mock_ollama)
         assert "BFS traversal" in content
         assert not content.startswith("### [AIM]")  # Header stripped
+
+    @pytest.mark.asyncio
+    async def test_regenerate_section_strips_compound_headers(self):
+        mock_gemini = AsyncMock()
+        mock_gemini.chat.return_value = """### [Viva Questions & Answers]\nQ1: What is BFS?\nA1: Breadth First Search."""
+
+        req = PracticalSectionRegenRequest(
+            section_key="viva_questions",
+            subject="Algorithms",
+            title="BFS",
+            question="BFS",
+            language="Python",
+        )
+
+        content = await PracticalService.regenerate_section(req, mock_gemini)
+        assert "Q1: What is BFS?" in content
+        assert "Viva Questions" not in content
+        assert not content.startswith("& Answers]")
 
 
 # ===========================================================================
@@ -381,6 +422,21 @@ class TestPracticalCRUD:
         assert client.get(f"/api/practicals/{id1}").status_code == 404
         assert client.get(f"/api/practicals/{id2}").status_code == 404
         assert client.get(f"/api/practicals/{dup_id}").status_code == 404
+
+    def test_my_practicals_print_url(self, client):
+        resp = client.post("/api/practicals", json={
+            "subject": "Algorithms",
+            "title": "Merge Sort",
+            "question": "Sort array",
+            "sections": {"aim": "Aim text"},
+        })
+        assert resp.status_code == 200
+        pid = resp.json()["id"]
+
+        page = client.get("/my-practicals")
+        assert page.status_code == 200
+        assert f"/practicals/{pid}/print" in page.text
+        assert f"/practicals({pid})/print" not in page.text
 
     def test_practical_studio_copy_code_block(self, client):
         page = client.get("/practical-studio")
